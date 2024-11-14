@@ -1,0 +1,373 @@
+---
+title: "reto2"
+author: "Valeria Serna"
+date: "2023-10-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# NO
+
+```{r}
+M <- read.csv("agrupado_meses.csv")
+```
+
+```{r}
+mes = 1:20
+NO = ts(M$NO[1:20], frequency = 6, start(c(2022, 1)))
+#T =decompose(x, type = "m")
+plot.ts(NO, col = "blue")
+```
+
+
+```{r}
+T = decompose(NO, type = "m")
+plot(T, col = "blue")
+```
+
+```{r}
+y1 = T$x/T$seasonal
+plot(mes, y1, type = "o", main = "Tendencia de la serie", xlab = "mes", ylab = "NO", lwd = 2, pch = 19)
+```
+```{r}
+calcular_CME <- function(params) {
+  a <- params[1]
+  b <- params[2]
+  regresion <- lm(y1 ~ sin(a * pi * mes/b) + cos(a * pi * mes/b))
+  e <- rep(NA, length(mes))
+  g <- rep(NA, length(mes))
+  for (i in mes) {
+    g[i] <- predict(regresion, newdata = data.frame(mes = mes[i]))
+    e[i] <- y1[i] - g[i]
+  }
+  CME_tendencia <- mean(e^2, na.rm = TRUE)
+  return(CME_tendencia)
+}
+
+resultado <- optim(c(1.9, 11.9), calcular_CME)
+
+
+regresion = lm(y1 ~ sin(resultado$par[1] * pi * mes/resultado$par[2]) + cos(resultado$par[1] * pi * mes/resultado$par[2]))
+plot(mes, y1, type = "o", main = "Tendencia de la serie", xlab = "mes", ylab = "NO", lwd = 2, pch = 19)
+lines(mes, predict(regresion), col = "red", lwd = 2)
+```
+
+CME 
+
+```{r}
+# Inicializar vectores e y g
+e = rep(NA, length(mes))
+g = rep(NA, length(mes))
+
+# Calcular valores de g y e usando la regresión sinusoidal
+for (i in mes) {
+  g[i] = predict(regresion, newdata = data.frame(mes = mes[i]))
+  e[i] = y1[i] - g[i]
+}
+
+CME_tendencia = mean(e^2, na.rm = TRUE)
+cat("El CME del Método de proyección de tendencia es: ", CME_tendencia, "\n")
+
+```
+```{r}
+xg = 1:20
+plot(xg, NO, col ="red", type = "o", lwd = 2, pch = 19)
+lines(xg, g, col = "blue", type = "o", lwd =2, lty = 5)
+legend("topleft", legend = c("NO", "pronóstico"), fill = c("red", "blue"))
+```
+
+```{r}
+# Crear un nuevo vector de meses para incluir los meses futuros
+meses_futuros <- 20:32
+
+# Crear un nuevo conjunto de datos con meses futuros
+nuevos_datos <- data.frame(mes = meses_futuros)
+
+# Obtener las predicciones para los meses futuros
+predicciones <- predict(regresion, newdata = nuevos_datos)
+
+# Visualizar las predicciones junto con los datos originales y la proyección de tendencia
+plot(c(xg, meses_futuros), c(NO, rep(NA, length(meses_futuros))), col ="black", type = "o", lwd = 2, pch = 19,
+     ylim = c(min(c(NO, predicciones, g), na.rm = TRUE), max(c(NO, predicciones, g), na.rm = TRUE)),
+     xlab = "Mes", ylab = "NO")
+lines(xg, g, col = "blue", type = "o", lwd = 2, lty = 5)
+lines(meses_futuros, predicciones, col = "red", type = "o", lwd = 2)
+legend("topleft", legend = c("NO", "Proyección de tendencia", "Predicciones"), fill = c("black", "blue", "red"), cex=0.6)
+```
+
+
+
+#NOX
+
+```{r}
+NOX = ts(M$NOX[1:20], frequency = 6, start(c(2022, 1)))
+#T =decompose(x, type = "m")
+plot.ts(NOX, col = "blue")
+```
+
+
+```{r}
+T = decompose(NOX, type = "m")
+plot(T, col = "blue")
+```
+
+```{r}
+y1 = T$x/T$seasonal
+plot(mes, y1, type = "o", main = "Tendencia de la serie", xlab = "mes", ylab = "NOX", lwd = 2, pch = 19)
+```
+
+```{r}
+calcular_CME <- function(params) {
+  a <- params[1]
+  b <- params[2]
+  regresion <- lm(y1 ~ sin(a * pi * mes/b) + cos(a * pi * mes/b))
+  e <- rep(NA, length(mes))
+  g <- rep(NA, length(mes))
+  for (i in mes) {
+    g[i] <- predict(regresion, newdata = data.frame(mes = mes[i]))
+    e[i] <- y1[i] - g[i]
+  }
+  CME_tendencia <- mean(e^2, na.rm = TRUE)
+  return(CME_tendencia)
+}
+
+resultado <- optim(c(1.9, 11.9), calcular_CME)
+
+
+regresion = lm(y1 ~ sin(resultado$par[1] * pi * mes/resultado$par[2]) + cos(resultado$par[1] * pi * mes/resultado$par[2]))
+plot(mes, y1, type = "o", main = "Tendencia de la serie", xlab = "mes", ylab = "NOX", lwd = 2, pch = 19)
+lines(mes, predict(regresion), col = "red", lwd = 2)
+```
+
+CME 
+
+```{r}
+# Inicializar vectores e y g
+e = rep(NA, length(mes))
+g = rep(NA, length(mes))
+
+# Calcular valores de g y e usando la regresión sinusoidal
+for (i in mes) {
+  g[i] = predict(regresion, newdata = data.frame(mes = mes[i]))
+  e[i] = y1[i] - g[i]
+}
+
+CME_tendencia = mean(e^2, na.rm = TRUE)
+cat("El CME del Método de proyección de tendencia es: ", CME_tendencia, "\n")
+
+```
+
+```{r}
+xg = 1:20
+plot(xg, NOX, col ="red", type = "o", lwd = 2, pch = 19)
+lines(xg, g, col = "blue", type = "o", lwd =2, lty = 5)
+legend("topleft", legend = c("NOX", "pronóstico"), fill = c("red", "blue"))
+```
+
+```{r}
+# Crear un nuevo vector de meses para incluir los meses futuros
+meses_futuros <- 20:32
+
+# Crear un nuevo conjunto de datos con meses futuros
+nuevos_datos <- data.frame(mes = meses_futuros)
+
+# Obtener las predicciones para los meses futuros
+predicciones <- predict(regresion, newdata = nuevos_datos)
+
+# Visualizar las predicciones junto con los datos originales y la proyección de tendencia
+plot(c(xg, meses_futuros), c(NOX, rep(NA, length(meses_futuros))), col ="black", type = "o", lwd = 2, pch = 19,
+     ylim = c(min(c(NOX, predicciones, g), na.rm = TRUE), max(c(NOX, predicciones, g), na.rm = TRUE)),
+     xlab = "Mes", ylab = "NOX")
+lines(xg, g, col = "blue", type = "o", lwd = 2, lty = 5)
+lines(meses_futuros, predicciones, col = "red", type = "o", lwd = 2)
+legend("topleft", legend = c("NOX", "Proyección de tendencia", "Predicciones"), fill = c("black", "blue", "red"), cex=0.6)
+```
+
+
+
+#NO2
+
+```{r}
+NO2 = ts(M$NO2[1:20], frequency = 6, start(c(2022, 1)))
+#T =decompose(x, type = "m")
+plot.ts(NO2, col = "blue")
+```
+
+
+```{r}
+T = decompose(NO2, type = "m")
+plot(T, col = "blue")
+```
+```{r}
+y1 = T$x/T$seasonal
+plot(mes, y1, type = "o", main = "Tendencia de la serie", xlab = "mes", ylab = "NO2", lwd = 2, pch = 19)
+```
+
+```{r}
+calcular_CME <- function(params) {
+  a <- params[1]
+  b <- params[2]
+  regresion <- lm(y1 ~ sin(a * pi * mes/b) + cos(a * pi * mes/b))
+  e <- rep(NA, length(mes))
+  g <- rep(NA, length(mes))
+  for (i in mes) {
+    g[i] <- predict(regresion, newdata = data.frame(mes = mes[i]))
+    e[i] <- y1[i] - g[i]
+  }
+  CME_tendencia <- mean(e^2, na.rm = TRUE)
+  return(CME_tendencia)
+}
+
+resultado <- optim(c(1.9, 11.9), calcular_CME)
+
+
+regresion = lm(y1 ~ sin(resultado$par[1] * pi * mes/resultado$par[2]) + cos(resultado$par[1] * pi * mes/resultado$par[2]))
+plot(mes, y1, type = "o", main = "Tendencia de la serie", xlab = "mes", ylab = "NO2", lwd = 2, pch = 19)
+lines(mes, predict(regresion), col = "red", lwd = 2)
+```
+
+CME 
+
+```{r}
+# Inicializar vectores e y g
+e = rep(NA, length(mes))
+g = rep(NA, length(mes))
+
+# Calcular valores de g y e usando la regresión sinusoidal
+for (i in mes) {
+  g[i] = predict(regresion, newdata = data.frame(mes = mes[i]))
+  e[i] = y1[i] - g[i]
+}
+
+CME_tendencia = mean(e^2, na.rm = TRUE)
+cat("El CME del Método de proyección de tendencia es: ", CME_tendencia, "\n")
+
+```
+
+```{r}
+xg = 1:20
+plot(xg, NO2, col ="red", type = "o", lwd = 2, pch = 19)
+lines(xg, g, col = "blue", type = "o", lwd =2, lty = 5)
+legend("topleft", legend = c("NO2", "pronóstico"), fill = c("red", "blue"))
+```
+
+```{r}
+# Crear un nuevo vector de meses para incluir los meses futuros
+meses_futuros <- 20:32
+
+# Crear un nuevo conjunto de datos con meses futuros
+nuevos_datos <- data.frame(mes = meses_futuros)
+
+# Obtener las predicciones para los meses futuros
+predicciones <- predict(regresion, newdata = nuevos_datos)
+
+# Visualizar las predicciones junto con los datos originales y la proyección de tendencia
+plot(c(xg, meses_futuros), c(NO2, rep(NA, length(meses_futuros))), col ="black", type = "o", lwd = 2, pch = 19,
+     ylim = c(min(c(NO2, predicciones, g), na.rm = TRUE), max(c(NO2, predicciones, g), na.rm = TRUE)),
+     xlab = "Mes", ylab = "NO2")
+lines(xg, g, col = "blue", type = "o", lwd = 2, lty = 5)
+lines(meses_futuros, predicciones, col = "red", type = "o", lwd = 2)
+legend("topleft", legend = c("NO2", "Proyección de tendencia", "Predicciones"), fill = c("black", "blue", "red"), cex=0.6)
+```
+
+
+#CO
+
+```{r}
+M <- read.csv("agrupado_dia_todo_1.csv")
+mes <- 1:48
+CO = ts(M$O3[mes], frequency = 12)
+#T =decompose(x, type = "m")
+plot.ts(CO, col = "blue")
+```
+
+
+```{r}
+T = decompose(CO, type = "m")
+plot(T, col = "blue")
+```
+
+```{r}
+y1 = T$x/T$seasonal
+plot(1:48, y1, type = "o", main = "Tendencia de la serie", xlab = "mes", ylab = "CO", lwd = 2, pch = 19)
+abline(v=24.5)
+abline(v=48.5)
+abline(v=72.5)
+abline(v=96.5)
+```
+
+```{r}
+calcular_CME <- function(params) {
+  a <- params[1]
+  b <- params[2]
+  regresion <- lm(y1 ~ sin(a * pi * mes/b) + cos(a * pi * mes/b))
+  e <- rep(NA, length(mes))
+  g <- rep(NA, length(mes))
+  for (i in mes) {
+    g[i] <- predict(regresion, newdata = data.frame(mes = mes[i]))
+    e[i] <- y1[i] - g[i]
+  }
+  CME_tendencia <- mean(e^2, na.rm = TRUE)
+  return(CME_tendencia)
+}
+
+resultado <- optim(c(1.9, 11.9), calcular_CME)
+
+
+regresion = lm(y1 ~ sin(resultado$par[1] * pi * mes/resultado$par[2]) + cos(resultado$par[1] * pi * mes/resultado$par[2]))
+plot(mes, y1, type = "o", main = "Tendencia de la serie", xlab = "mes", ylab = "CO", lwd = 2, pch = 19)
+lines(mes, predict(regresion), col = "red", lwd = 2)
+```
+
+CME 
+
+```{r}
+# Inicializar vectores e y g
+e = rep(NA, length(mes))
+g = rep(NA, length(mes))
+
+# Calcular valores de g y e usando la regresión sinusoidal
+for (i in mes) {
+  g[i] = predict(regresion, newdata = data.frame(mes = mes[i]))
+  e[i] = y1[i] - g[i]
+}
+
+CME_tendencia = mean(e^2, na.rm = TRUE)
+cat("El CME del Método de proyección de tendencia es: ", CME_tendencia, "\n")
+
+```
+
+```{r}
+xg = 1:96
+plot(xg, CO, col ="red", type = "o", lwd = 2, pch = 19)
+lines(xg, g, col = "blue", type = "o", lwd =2, lty = 5)
+legend("topleft", legend = c("CO", "pronóstico"), fill = c("red", "blue"))
+```
+
+```{r}
+# Crear un nuevo vector de meses para incluir los meses futuros
+meses_futuros <- 20:32
+
+# Crear un nuevo conjunto de datos con meses futuros
+nuevos_datos <- data.frame(mes = meses_futuros)
+
+# Obtener las predicciones para los meses futuros
+predicciones <- predict(regresion, newdata = nuevos_datos)
+
+# Visualizar las predicciones junto con los datos originales y la proyección de tendencia
+plot(c(xg, meses_futuros), c(CO, rep(NA, length(meses_futuros))), col ="black", type = "o", lwd = 2, pch = 19,
+     ylim = c(min(c(CO, predicciones, g), na.rm = TRUE), max(c(CO, predicciones, g), na.rm = TRUE)),
+     xlab = "Mes", ylab = "CO")
+lines(xg, g, col = "blue", type = "o", lwd = 2, lty = 5)
+lines(meses_futuros, predicciones, col = "red", type = "o", lwd = 2)
+legend("topleft", legend = c("CO", "Proyección de tendencia", "Predicciones"), fill = c("black", "blue", "red"), cex=0.6)
+```
+
+
+
+
+
+
