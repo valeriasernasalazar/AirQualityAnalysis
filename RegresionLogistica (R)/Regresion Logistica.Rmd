@@ -1,0 +1,173 @@
+---
+title: "logistica_sepodra?"
+author: "Valeria Serna"
+date: "2023-10-19"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### R Markdown
+
+```{r}
+san_nico = read.csv("agrupado_hora_semana_rangos.csv")
+n <- read.csv("Todo_Rangos_O3.csv")
+```
+
+```{r}
+n$agrupado_O3 = ifelse(n$agrupado_O3 == "Alto", 1, ifelse(n$agrupado_O3 == "Bajo", 0, n$agrupado_O3))
+```
+
+```{r}
+train_data <- n[n$year < 2023, ]
+test_data <- n[n$year >= 2023, ]
+```
+
+```{r}
+train_data$agrupado_O3 <- as.numeric(train_data$agrupado_O3)
+```
+
+```{r}
+modelo <- glm(agrupado_O3 ~ NOX + RH + SR + hora, data = train_data, family = "binomial")
+summary(modelo)
+```
+
+```{r}
+pred = predict(modelo, newdata = test_data, type = "response")
+pred_dividio = ifelse(pred > 0.5, "1", "0")
+library(caret)
+t <- confusionMatrix(as.factor(pred_dividio), as.factor(test_data$agrupado_O3))
+t
+```
+
+
+
+
+#### Divida el conjunto de datos en un conjunto de:
+
+```{r}
+san_nico$agrupado_O3 = ifelse(san_nico$agrupado_O3 == "Alto", 1, ifelse(san_nico$agrupado_O3 == "Bajo", 0, san_nico$agrupado_O3))
+```
+
+```{r}
+train_data <- san_nico[san_nico$year < 2023, ]
+test_data <- san_nico[san_nico$year >= 2023, ]
+```
+
+# AGRUPADO POR HORA
+
+```{r}
+train_data$agrupado_O3 <- as.numeric(train_data$agrupado_O3)
+```
+
+
+```{r}
+modelo <- glm(agrupado_O3 ~ NOX + RH + SR, data = train_data, family = "binomial")
+summary(modelo)
+```
+```{r}
+pred = predict(modelo, newdata = test_data, type = "response")
+pred_dividio = ifelse(pred > 0.5, "1", "0")
+library(caret)
+t <- confusionMatrix(as.factor(pred_dividio), as.factor(test_data$agrupado_O3))
+t
+```
+
+
+
+#### Represente gráficamente el modelo, grafique la curva de regresión logarítmica.
+
+```{r}
+ggplot(data = train_data, aes(x = NOX, y = Rango_O3)) +
+  geom_point() +
+  geom_smooth(method = "glm", method.args = list(family = "binomial"), color = "blue") +
+  labs(x = "NOX", y = "Probabilidad de Rango_O3", title = "Curva de Regresión Logística")
+```
+
+#### Evalúe el modelo.
+
+##### ANOVA
+
+```{r}
+modelonulo <- glm(Direction ~ 1, data = train_data, family = "binomial")
+
+anova(modelonulo, modelo, test="Chisq")
+```
+
+Los residuales son menores con el segundo modelo, tambien, el valor p es 0.041 es menor a alfa 0.05, indicando que Lag2 es estadísticamente significativo, pues, a comparación del modelo 1, se adapta mejor a los datos. 
+
+```{r}
+pred = predict(modelo, newdata = test_data, type = "response")
+pred_dividio = ifelse(pred > 0.5, "Up", "Down")
+library(caret)
+t <- confusionMatrix(as.factor(pred_dividio), as.factor(test_data$Direction))
+t
+```
+
+```{r}
+library(vcd)
+mosaic(t$table, shape = TRUE)
+```
+
+##### Accuracy
+
+El porcentaje de predicciones correctas sobre los datos de prueba es 62.5 %
+
+##### Tasa de error
+
+La tasa de error es 37.5
+
+##### Sensibilidad
+
+Para aquellas semanas con un valor de mercado al alza, el modelo clasifica correctamente el: 20.93 % de las observaciones. 
+
+##### Especificidad
+
+Para las semanas con un valor de mercado a la baja, el modelo acierta en un: 91.80 % de las observaciones. 
+
+#### Supuestos del Modelo
+
+##### Independencia
+
+$H_0$: Los residuales son independientes.
+$H_1$: Los residuales no son independientes. 
+
+```{r}
+library(lmtest)
+plot(modelo$residuals)
+dwtest(modelo)
+```
+
+
+De acuerdo al p-value, hay evidencia estadística para aceptar la hipótesis nula, significando que los residuales son independientes. Esto se puede observar en el gráfico por la separación entre las variables. 
+
+##### Multicolinealidad
+
+No se puede calcular es un modelo simple. 
+
+##### Linealidad
+
+```{r}
+preds <- predict(modelo, newdata=test_data, type = "link")
+
+plot(test_data$Lag2, preds, pch = 16, col = "blue", xlab = "Lag2", ylab = "Logit(Dirección)", main = "Gráfico Logit(Dirección) vs Lag2")
+abline(lm(preds ~ test_data$Lag2), col="black")
+```
+
+Como sigue la linea negra, es normalidad. 
+
+```{r}
+casos_menos_frecuentes <- min(table(train_data$Direction))  
+
+if (casos_menos_frecuentes >= 10) {
+  print("Cumple con el requisito de tamaño muestral para Lag2.")
+} else {
+  print("No cumple con el requisito de tamaño muestral para Lag2.")
+}
+```
+
+
